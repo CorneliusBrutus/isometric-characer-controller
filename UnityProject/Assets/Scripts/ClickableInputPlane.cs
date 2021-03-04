@@ -1,41 +1,30 @@
-﻿using IsometricCharacterController.Interfaces;
-using UnityEngine;
-using UnityEngine.AI;
-using Zenject;
+﻿using UnityEngine;
 
-namespace Assets.Scripts
+namespace IsometricCharacterController
 {
-  //TODO auto generate based on nav mesh?
   public class ClickableInputPlane : MonoBehaviour
   {
+    private Camera mainCamera;
     private Plane plane;
-    private IInputDriver inputDriver;
-
-    [Inject]
-    public void Construct(IInputDriver inputDriver)
-    {
-      this.inputDriver = inputDriver;
-    }
 
     void Awake()
     {
+      mainCamera = Camera.main;
       plane = new Plane(Vector3.up, transform.position);
     }
 
-    private void Update()
+    public bool TryClickPlane(Vector2 positionInCamera, out Vector3 point)
     {
-      if (Input.GetMouseButtonDown(1))
+      point = Vector3.zero;
+      var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+
+      if (plane.Raycast(ray, out float enter))
       {
-        var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (plane.Raycast(ray, out float enter))
-        {
-          //TODO instead we make a NavMeshClicked event or something to hand this off
-          //so different motor processors can handle it differently?
-          //TODO make injectable navigation prefabs?
-          var point = ray.GetPoint(enter);
-          inputDriver.Position = point;
-        }
-      }   
-    }
+        point = ray.GetPoint(enter);
+        return true;
+      }
+
+      return false;
+    }   
   }
 }
